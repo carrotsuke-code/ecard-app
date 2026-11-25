@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>絵カードアプリ</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: sans-serif;
+  background: #f5f7fa;
+  color: #333;
+  overflow-x: hidden;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: 24px;
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.settings-button {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: #526b91;
+  color: white;
+  font-size: 16px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.card {
+  background: white;
+  border: 3px solid #e1e6ed;
+  border-radius: 18px;
+  padding: 10px;
+  min-width: 0;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #333;
+  box-shadow: 0 3px 8px #00000010;
+}
+
+.card:active {
+  background: #e8f1ff;
+  transform: scale(0.98);
+}
+
+.card img {
+  width: 100%;
+  height: 125px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.card .emoji {
+  font-size: 75px;
+  line-height: 1.2;
+}
+
+.card .card-text {
+  font-size: 22px;
+  font-weight: bold;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.page-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 10px;
+}
+
+.page-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: #cbd2dc;
+}
+
+.page-dot.active {
+  background: #526b91;
+  transform: scale(1.25);
+}
+
+.page-caption {
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+#settingsScreen {
+  display: none;
+}
+
+.settings-intro {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.editor-pages {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.editor-page-button {
+  border: 1px solid #ccd3dc;
+  background: white;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 15px;
+}
+
+.editor-page-button.active {
+  background: #526b91;
+  color: white;
+  border-color: #526b91;
+}
+
+.add-page-button {
+  border: 1px dashed #526b91;
+  background: #edf2f9;
+  color: #405b82;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 15px;
+}
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.edit-card {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid #ddd;
+  min-width: 0;
+}
+
+.edit-card h3 {
+  margin: 0 0 10px;
+}
+
+.preview {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.preview .emoji {
+  font-size: 55px;
+}
+
+.edit-card input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.edit-card input[type="file"] {
+  width: 100%;
+  font-size: 14px;
+}
+
+.remove-photo {
+  margin-top: 10px;
+  padding: 8px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+.save-button,
+.cancel-button {
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.save-button {
+  background: #438b70;
+  color: white;
+  flex: 1;
+}
+
+.cancel-button {
+  background: #e3e7ec;
+  color: #333;
+}
+
+@media (max-width: 650px) {
+  body {
+    padding: 12px;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .card {
+    min-height: 160px;
+  }
+
+  .card img {
+    height: 100px;
+  }
+
+  .card .emoji {
+    font-size: 60px;
+  }
+
+  .card .card-text {
+    font-size: 19px;
+  }
+
+  .edit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header id="mainHeader">
+  <h1>えらんでね！</h1>
+  <button class="settings-button" onclick="openSettings()">
+    ⚙️ 設定
+  </button>
+</header>
+
+<main id="mainScreen">
+  <div class="card-grid" id="cardGrid"></div>
+
+  <div class="page-indicators" id="pageIndicators"></div>
+  <div class="page-caption" id="pageCaption"></div>
+</main>
+
+<section id="settingsScreen">
+  <h2>⚙️ カードの設定</h2>
+  <p class="settings-intro">
+    編集したいページを選んでね。写真や文字を変更できるよ！
+  </p>
+
+  <div class="editor-pages" id="editorPages"></div>
+
+  <div class="edit-grid" id="editGrid"></div>
+
+  <div class="settings-actions">
+    <button class="cancel-button" onclick="closeSettings()">
+      キャンセル
+    </button>
+    <button class="save-button" onclick="saveSettings()">
+      保存して戻る
+    </button>
+  </div>
+</section>
+
+<script>
+const defaultCards = [
+  { text: "お水", emoji: "💧", image: "" },
+  { text: "ごはん", emoji: "🍚", image: "" },
+  { text: "トイレ", emoji: "🚽", image: "" },
+  { text: "おしまい", emoji: "✋", image: "" },
+  { text: "あそぶ", emoji: "🧸", image: "" },
+  { text: "ねる", emoji: "🌙", image: "" },
+  { text: "いたい", emoji: "❤️", image: "" },
+  { text: "もっと", emoji: "➕", image: "" }
+];
+
+function makeEmptyPage() {
+  return {
+    cards: Array.from({ length: 8 }, () => ({
+      text: "",
+      emoji: "➕",
+      image: ""
+    }))
+  };
+}
+
+function normalizePage(page) {
+  const source = Array.isArray(page.cards) ? page.cards : [];
+
+  return {
+    cards: Array.from({ length: 8 }, (_, index) => {
+      const card = source[index] || {};
+      return {
+        text: card.text || "",
+        emoji: card.emoji || "➕",
+        image: card.image || ""
+      };
+    })
+  };
+}
+
+function loadPages() {
+  try {
+    const savedPages = localStorage.getItem("myPicturePages");
+
+    if (savedPages) {
+      const parsed = JSON.parse(savedPages);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map(normalizePage);
+      }
+    }
+
+    // 以前の8枚のカードを1ページ目に引き継ぐ
+    const oldCards = localStorage.getItem("myPictureCards");
+
+    if (oldCards) {
+      const parsed = JSON.parse(oldCards);
+
+      if (Array.isArray(parsed) && parsed.length === 8) {
+        return [normalizePage({ cards: parsed })];
+      }
+    }
+  } catch (error) {
+    console.log("保存データを読み込めませんでした", error);
+  }
+
+  return [{
+    cards: defaultCards.map(card => ({ ...card }))
+  }];
+}
+
+let pages = loadPages();
+let currentPageIndex = 0;
+
+let editingPages = [];
+let editingPageIndex = 0;
+
+function renderCards() {
+  const grid = document.getElementById("cardGrid");
+  grid.innerHTML = "";
+
+  const currentCards = pages[currentPageIndex].cards;
+
+  currentCards.forEach(card => {
+    const button = document.createElement("button");
+    button.className = "card";
+    button.type = "button";
+
+    if (card.image) {
+      const img = document.createElement("img");
+      img.src = card.image;
+      img.alt = card.text;
+      button.appendChild(img);
+    } else {
+      const emoji = document.createElement("div");
+      emoji.className = "emoji";
+      emoji.textContent = card.emoji || "➕";
+      button.appendChild(emoji);
+    }
+
+    const label = document.createElement("div");
+    label.className = "card-text";
+    label.textContent = card.text || "未設定";
+
+    button.appendChild(label);
+
+    button.addEventListener("click", () => {
+      if (card.text.trim()) {
+        speak(card.text);
+      }
+    });
+
+    grid.appendChild(button);
+  });
+
+  renderPageIndicators();
+}
+
+function renderPageIndicators() {
+  const indicators = document.getElementById("pageIndicators");
+  indicators.innerHTML = "";
+
+  pages.forEach((page, index) => {
+    const dot = document.createElement("button");
+    dot.className = "page-dot";
+    dot.classList.toggle("active", index === currentPageIndex);
+    dot.setAttribute("aria-label", (index + 1) + "ページ目");
+
+    dot.addEventListener("click", () => {
+      currentPageIndex = index;
+      renderCards();
+    });
+
+    indicators.appendChild(dot);
+  });
+
+  document.getElementById("pageCaption").textContent =
+    (currentPageIndex + 1) + " / " + pages.length + " ページ";
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) {
+    alert("このブラウザでは音声読み上げに対応していません。");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "ja-JP";
+  utterance.rate = 0.9;
+  utterance.pitch = 1.0;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// 左右スワイプでページ移動
+let touchStartX = 0;
+let touchStartY = 0;
+
+const mainScreen = document.getElementById("mainScreen");
+
+mainScreen.addEventListener("touchstart", event => {
+  if (event.touches.length !== 1) return;
+
+  touchStartX = event.touches[0].clientX;
+  touchStartY = event.touches[0].clientY;
+}, { passive: true });
+
+mainScreen.addEventListener("touchend", event => {
+  if (event.changedTouches.length !== 1) return;
+
+  const endX = event.changedTouches[0].clientX;
+  const endY = event.changedTouches[0].clientY;
+
+  const diffX = endX - touchStartX;
+  const diffY = endY - touchStartY;
+
+  // 横方向に十分動いたときだけページを変更
+  if (Math.abs(diffX) < 60) return;
+  if (Math.abs(diffX) < Math.abs(diffY) * 1.3) return;
+
+  if (diffX < 0) {
+    // 左スワイプ：次のページ
+    if (currentPageIndex < pages.length - 1) {
+      currentPageIndex++;
+      renderCards();
+    }
+  } else {
+    // 右スワイプ：前のページ
+    if (currentPageIndex > 0) {
+      currentPageIndex--;
+      renderCards();
+    }
+  }
+}, { passive: true });
+
+function openSettings() {
+  editingPages = JSON.parse(JSON.stringify(pages));
+  editingPageIndex = currentPageIndex;
+
+  document.getElementById("mainScreen").style.display = "none";
+  document.getElementById("mainHeader").style.display = "none";
+  document.getElementById("settingsScreen").style.display = "block";
+
+  renderEditor();
+}
+
+function closeSettings() {
+  document.getElementById("settingsScreen").style.display = "none";
+  document.getElementById("mainScreen").style.display = "block";
+  document.getElementById("mainHeader").style.display = "flex";
+}
+
+function renderEditor() {
+  renderEditorPages();
+  renderEditorCards();
+}
+
+function renderEditorPages() {
+  const area = document.getElementById("editorPages");
+  area.innerHTML = "";
+
+  editingPages.forEach((page, index) => {
+    const button = document.createElement("button");
+    button.className = "editor-page-button";
+    button.classList.toggle("active", index === editingPageIndex);
+    button.textContent = (index + 1) + "ページ目";
+
+    button.addEventListener("click", () => {
+      editingPageIndex = index;
+      renderEditor();
+    });
+
+    area.appendChild(button);
+  });
+
+  const addButton = document.createElement("button");
+  addButton.className = "add-page-button";
+  addButton.textContent = "＋ ページ追加";
+
+  addButton.addEventListener("click", () => {
+    editingPages.push(makeEmptyPage());
+    editingPageIndex = editingPages.length - 1;
+    renderEditor();
+  });
+
+  area.appendChild(addButton);
+}
+
+function renderEditorCards() {
+  const grid = document.getElementById("editGrid");
+  grid.innerHTML = "";
+
+  const currentCards = editingPages[editingPageIndex].cards;
+
+  currentCards.forEach((card, index) => {
+    const container = document.createElement("div");
+    container.className = "edit-card";
+
+    const title = document.createElement("h3");
+    title.textContent = "カード " + (index + 1);
+    container.appendChild(title);
+
+    const preview = document.createElement("div");
+    preview.className = "preview";
+    updatePreview(preview, card);
+    container.appendChild(preview);
+
+    const textInput = document.createElement("input");
+    textInput.type = "text";
+    textInput.value = card.text;
+    textInput.placeholder = "カードの文字";
+
+    textInput.addEventListener("input", () => {
+      editingPages[editingPageIndex].cards[index].text =
+        textInput.value;
+    });
+
+    container.appendChild(textInput);
+
+    const fileLabel = document.createElement("div");
+    fileLabel.textContent = "📷 写真を変更";
+    fileLabel.style.fontWeight = "bold";
+    fileLabel.style.marginBottom = "8px";
+    container.appendChild(fileLabel);
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      try {
+        const compressedImage = await compressImage(file);
+        editingPages[editingPageIndex].cards[index].image =
+          compressedImage;
+
+        updatePreview(
+          preview,
+          editingPages[editingPageIndex].cards[index]
+        );
+      } catch (error) {
+        alert("写真を読み込めませんでした。別の写真で試してね。");
+      }
+    });
+
+    container.appendChild(fileInput);
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "remove-photo";
+    removeButton.textContent = "写真を外して絵文字に戻す";
+
+    removeButton.addEventListener("click", () => {
+      editingPages[editingPageIndex].cards[index].image = "";
+      updatePreview(
+        preview,
+        editingPages[editingPageIndex].cards[index]
+      );
+      fileInput.value = "";
+    });
+
+    container.appendChild(removeButton);
+    grid.appendChild(container);
+  });
+}
+
+function updatePreview(preview, card) {
+  preview.innerHTML = "";
+
+  if (card.image) {
+    const img = document.createElement("img");
+    img.src = card.image;
+    preview.appendChild(img);
+  } else {
+    const emoji = document.createElement("div");
+    emoji.className = "emoji";
+    emoji.textContent = card.emoji || "➕";
+    preview.appendChild(emoji);
+  }
+}
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const img = new Image();
+
+      img.onload = () => {
+        const maxSize = 700;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxSize || height > maxSize) {
+          const ratio = Math.min(
+            maxSize / width,
+            maxSize / height
+          );
+
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.75));
+      };
+
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveSettings() {
+  const saveButton = document.querySelector(".save-button");
+  saveButton.disabled = true;
+
+  try {
+    localStorage.setItem(
+      "myPicturePages",
+      JSON.stringify(editingPages)
+    );
+
+    pages = JSON.parse(JSON.stringify(editingPages));
+
+    if (currentPageIndex >= pages.length) {
+      currentPageIndex = pages.length - 1;
+    }
+
+    renderCards();
+    closeSettings();
+    alert("保存できたよ！");
+  } catch (error) {
+    alert(
+      "保存できなかったよ。写真の容量が大きい可能性があるので、写真を減らして試してね。"
+    );
+  } finally {
+    saveButton.disabled = false;
+  }
+}
+
+renderCards();
+</script>
+
+</body>
+</html>
